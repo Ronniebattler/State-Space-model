@@ -1,0 +1,330 @@
+\documentclass[UTF8,12pt]{ctexart}
+%加载包
+\usepackage{ctex}
+\usepackage{geometry}%排版
+%a4版面，页边距1英寸,showframe 增加边框的参数。
+% 设置为A4纸，边距适中模式（永中office）
+\geometry{%
+	width = 210mm,%
+	height = 297mm,
+	left = 31.8mm,%
+	right = 31.8mm,%
+	top = 25.4mm,%
+	bottom = 25.4mm%
+}
+
+%\hyphenpenalty = 1000% 断字设置，值越大，断字越少。
+%\setlength{\parindent}{2em}% 缩进
+%\setlength{\parskip}{0.5ex} % 段间距
+
+\usepackage{cite} %引用
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}%公式
+\usepackage{amsthm}%定理环境
+
+%\usepackage{ntheorem}%定理环境，使用这个会使\maketitle版式出问题
+\usepackage{bm}%加粗
+
+\usepackage{mathrsfs}
+\numberwithin{equation}{section}%对公式以节{section}为基础进行编号.变成（1.1.1）有chapter才有1.1.1，不然只有section是1.1
+%\theoremstyle{plain}%定理用latex默认的版式
+\newtheorem{thm}{Theorem}[section]
+%\theoremstyle{definition}%定义用definition格式
+\newtheorem{defn}{Definition}
+%\theoremstyle{remark}%用remark格式
+\newtheorem{lemma}[thm]{lemma}
+\newtheorem{example}{Example}[section]
+
+\usepackage{multirow}%表格列合并宏包，\multirow命令.
+
+\usepackage{tabularx}%表格等宽，\begin{tabularx}命令.
+
+ 
+%盒子
+\usepackage[many]{tcolorbox}    	% for COLORED BOXES (tikz and xcolor included)
+\usepackage{setspace}               % for LINE SPACING
+\usepackage{multicol}               % for MULTICOLUMNS
+%自定义设定		
+	\definecolor{main}{HTML}{5989cf}    % setting main color to be used
+	\definecolor{sub}{HTML}{cde4ff}     % setting sub color to be used
+	
+	\newtcolorbox{boxF}{
+		colback=blue!5!white,
+		enhanced,
+		boxrule = 1.5pt, 
+		colframe = white, % making the base for dash line
+		borderline = {1.5pt}{0pt}{main, dashed} % add "dashed" for dashed line
+	}
+\tcbuselibrary{skins, breakable}% 支持文本框跨页
+
+\usepackage[english]{babel}% 载入美式英语断字模板
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfigure} %插入多图时用子图显示的宏包
+
+\usepackage{algorithm,algorithmic}%算法
+
+\usepackage{listings}   %代码块
+\usepackage{xcolor}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+%设置代码块
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=mystyle,
+	language=R,                                       % 设置语言
+}
+
+\usepackage{appendix}%附录
+
+\usepackage{hyperref}%可以生成pdf书签，可以跳转
+\hypersetup{
+	colorlinks=true,
+	linkcolor=black,
+	citecolor=black,
+}%使得目录没有红框 参考文献引用没有颜色
+
+%侧栏笔记
+\usepackage{marginnote}
+\setlength{\marginparwidth}{2.8cm}%设置宽度
+\renewcommand*{\marginfont}{\color{violet}\footnotesize}%fonts
+%运用此命令就可加入侧栏笔记\normalmarginpar\marginnote{}
+
+%图注
+\usepackage{caption}
+
+%参考文献
+\usepackage[round]{natbib}
+
+
+%画图
+\usepackage{tikz}
+
+%标题页
+\title{Example of Regime Switching State Space Model}
+\author{Renhe W.}
+\date{ }
+
+%工具
+%使用文本框
+%\begin{tcolorbox}[enhanced]	\end{tcolorbox}
+%代码框
+%{\setmainfont{Courier New Bold}                       %设置代码字体                   
+%\begin{lstlisting}
+
+%\end{lstlisting}}
+
+%文章开始部分
+
+\begin{document}
+	\captionsetup[figure]{labelfont={bf},labelformat={default},labelsep=period,name={图}}%设置图注
+	
+	\maketitle
+	\tableofcontents%目录
+	\listoffigures%图片目录
+	\listoftables%表格目录
+	\newpage
+	\kaishu
+	
+
+	\section{Kim(1994)-Regime Switching State Space Model}
+	
+	\subsection{Regime Switching State Space Model}
+	As an example of a regime switching state space model, Prof. Kim used the following generalized Hamilton model for the log of real GNP (Lam; 1990) in his paper and book.
+	$$
+	\begin{aligned}
+		\ln \left(G N P_t\right) & =n_t+x_t \\
+		n_t & =n_{t-1}+\mu_0+\mu_1 s_t \\
+		x_t & =\phi_1 x_{t-1}+\phi_2 x_{t-2}+u_t \\
+		u_t & \sim N\left(0, \sigma^2\right) \\
+		s_t & =0,1 \quad P_{t j}=\left[\begin{array}{ll}
+			p_{00} & p_{01} \\
+			p_{10} & p_{11}
+		\end{array}\right]
+	\end{aligned}
+	$$
+	where $\ln \left(G N P_t\right)$ is a real GNP level. $n_t$ is a deterministic series with a regimeswitching growth rate and $x_t$ is stationary AR(2) cycle process.
+	Since $\ln \left(G N P_t\right)$ is the log level variable, the difference of it, $y_t=\ln \left(G N P_t\right)-\ln \left(G N P_{t-1}\right)$, can be represented as a state space model in the following way.
+	$$
+	\begin{aligned}
+		& y_t=\mu_0+\mu_1 s_t+x_t-x_{t-1} \\
+		& x_t=\phi_1 x_{t-1}+\phi_2 x_{t-2}+u_t
+	\end{aligned}
+	$$
+	It is a typical approach that a state space model is represented as a vector-matrix form for using Kalman filter as follows.
+	$$
+	\begin{aligned}
+		y_t & =\mu_{s_t}+\left[\begin{array}{ll}
+			1 & -1
+		\end{array}\right]\left[\begin{array}{c}
+			x_t \\
+			x_{t-1}
+		\end{array}\right] \\
+		{\left[\begin{array}{c}
+				x_t \\
+				x_{t-1}
+			\end{array}\right] } & =\left[\begin{array}{cc}
+			\phi_1 & \phi_2 \\
+			1 & 0
+		\end{array}\right]\left[\begin{array}{c}
+			x_{t-1} \\
+			x_{t-2}
+		\end{array}\right]+\left[\begin{array}{c}
+			u_t \\
+			0
+		\end{array}\right] \\
+		u_t & \sim N\left(0, \sigma^2\right) \\
+		\mu_{s_t} & =\mu_0+\mu_1 s_t, \quad \mu_1>0 \\
+		s_t & =0,1 \quad P_{t j}=\left[\begin{array}{ll}
+			p_{00} & p_{01} \\
+			p_{10} & p_{11}
+		\end{array}\right] \\
+		\Downarrow & \\
+		y_t & =\mu_{s_t}+F \mathbf{x}_t \\
+		\mathbf{x}_t & =A \mathbf{x}_{t-1}+v_t
+	\end{aligned}
+	$$
+	For the sake of notational simplicity, we use $x_t$ instead of $\mathbf{x}_t$.
+	
+	\subsection{Kalman Filtering}
+	Kalman filter with regime switching is used to get state estimates from a state space model taking regime transition into account and has the following recursion.
+	$$
+	\begin{aligned}
+		x_{t \mid t-1}^{i j} & =A x_{t-1 \mid t-1}^i \\
+		P_{t \mid t-1}^{i j} & =A P_{t-1 \mid t-1}^i A^T+Q \\
+		\eta_{t \mid t-1}^{i j} & =y_t-\mu_j-F x_{t \mid t-1}^{i j} \\
+		H_{t \mid t-1}^{i j} & =F P_{t \mid t-1}^{i j} F^T+R \\
+		K^{i j} & =P_{t \mid t-1}^{i j} F^T\left[H_{t \mid t-1}^{i j}\right]^{-1} \\
+		x_{t \mid t}^{i j} & =x_{t \mid t-1}^{i j}+K^{i j} \eta_{t \mid t-1}^{i j} \\
+		P_{t \mid t}^{i j} & =\left(I-K^{i j} F\right) P_{t \mid t-1}^{i j}
+	\end{aligned}
+	$$
+	In regime-dependent Kalman filter, all the notations are augmented with superscript $\{i j\}$ except $x_{t-1 \mid t-1}^i$ and $P_{t-1 \mid t-1}^i$ since these two estimates are in i-state (two-state) but other estimates must reflect state transitions from i to $\mathrm{j}$ (four-state). For example, $x_{t \mid t-1}$ and $x_{t \mid t-1}^{i j}$ are different in terms of conditioning information.
+	$$
+	\begin{aligned}
+		x_{t \mid t-1} & =E\left[X_t \mid \psi_{t-1}\right] \\
+		x_{t \mid t-1}^{i j} & =E\left[X_t \mid \psi_{t-1}, S_t=j, S_{t-1}=i\right]
+	\end{aligned}
+	$$
+	In contrast to the single regime, however, in the multiple regimes, $x_{t \mid t}^{i j}$ and $P_{t \mid t}^{i j}$ cannot be used the next state prediction due simply to the mismatch both 1) between $x_{t \mid t}^{i j}$ and $x_{t-1 \mid t-1}^i$ and 2) between $P_{t \mid t}^{i j}$ and $P_{t-1 \mid t-1}^i$. To resolve this mismatch problem, Kim (1994) developed a dimension collapsing algorithm.
+	
+	\subsection{Kim(1994)’s Collapsing procedure}
+	Kim (1994) introduces a collapsing procedure (approximation) to reduce the $(M \times M)$ posteriors $\left(x_{t \mid t}^{i j}\right.$ and $P_{t \mid t}^{i j}$ ) into $M$ to complete the above Kalman filter recursion.
+	$$
+	\begin{aligned}
+		x_{t \mid t}^j & =\frac{\sum_{i=1}^M P\left[S_{t-1}=i, S_t=j \mid \psi_t\right] x_{t \mid t}^{i j}}{P\left[S_t=j \mid \psi_t\right]} \\
+		P_{t \mid t}^j & =\frac{\sum_{i=1}^M P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]\left[P_{t \mid t}^{i j}+\left(x_{t \mid t}^j-x_{t \mid t}^{i j}\right)\left(x_{t \mid t}^j-x_{t \mid t}^{i j}\right)^T\right]}{P\left[S_t=j \mid \psi_t\right]}
+	\end{aligned}
+	$$
+	To calculate the above approximation, when we calculate $P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]$, $P\left[S_t=j \mid \psi_t\right]$ is easily obtained by summing its $\mathrm{M}$ branches from each i states.
+	$$
+	P\left[S_t=j \mid \psi_t\right]=\sum_{i=1}^M P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]
+	$$
+	Knowing $P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]$ means that we observe time t data since the last time of information set is $t$ and the state is migrated from $i$ to $j$. For this data information into account, we can think of the marginal probability of state transition by integrating out data.
+	$$
+	\begin{aligned}
+		& P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]=\frac{f\left(y_t, S_{t-1}=i, S_t=j \mid \psi_{t-1}\right)}{f\left(y_t \mid \psi_{t-1}\right)} \\
+		& f\left(y_t \mid \psi_{t-1}\right)=\sum_{j=1}^M \sum_{i=1}^M f\left(y_t, S_{t-1}=i, S_t=j \mid \psi_{t-1}\right)
+	\end{aligned}
+	$$
+	As can be seen from the above equations, when we know $f\left(y_t, S_{t-1}=i, S_t=j \mid \psi_{t-1}\right)$ which is the joint density of data and two states, $P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]$ and $f\left(y_t \mid \psi_{t-1}\right)$ are easily obtained. We get the following the joint density.
+	$$
+	\begin{aligned}
+		& f\left(y_t, S_{t-1}=i, S_t=j \mid \psi_{t-1}\right) \\
+		& =f\left(y_t \mid S_{t-1}=i, S_t=j, \psi_{t-1}\right) \times P\left(S_{t-1}=i, S_t=j \mid \psi_{t-1}\right)
+	\end{aligned}
+	$$
+	Now we need to know two parts. The first part is the forecast error given data. (MVN : probability density function of multivariate normal distribution with zero mean and forecast error variance)
+	$$
+	\begin{aligned}
+		& f\left(y_t \mid S_{t-1}=i, S_t=j, \psi_{t-1}\right) \\
+		& =M V N \text { (forecast error, its variance) }
+	\end{aligned}
+	$$
+	The second part is calculated by the multiplication of the transition probability and the summation of its branches.
+	$$
+	\begin{aligned}
+		& P\left(S_{t-1}=i, S_t=j \mid \psi_{t-1}\right) \\
+		& =P\left[S_t=j \mid S_{t-1}=i\right] \times \sum_{k=1}^M f\left(S_{t-2}=k, S_{t-1}=i \mid \psi_{t-1}\right) \\
+		& =P_{i j} \times f\left(S_{t-1}=i \mid \psi_{t-1}\right)
+	\end{aligned}
+	$$
+	In the above equation, as we know, $P_{i j}$ is already known as transition probability matrix and $f\left(S_{t-2}=k, S_{t-1}=i \mid \psi_{t-1}\right)$ is exactly what we want to find but evaluated at the previous t- 1 time. Therefore for the iteration, $f\left(S_{-1}=k, S_0=i \mid \psi_0\right)$ calls for initialization with the steady state probabilities.
+	Therefore, we can calculate $P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]$ and $P\left[S_t=j \mid \psi_t\right]$ through the above equations.
+	
+	\subsection{Kim (1994) Filter for Regime Switching State Space model}
+	Kim filtering procedure is summarized in a sequence of equations.
+	Kalman Filtering
+	$$
+	\begin{aligned}
+		x_{t \mid t-1}^{i j} & =A x_{t-1 \mid t-1}^i \\
+		P_{t \mid t-1}^{i j} & =A P_{t-1 \mid t-1}^i A^T+Q \\
+		\eta_{t \mid t-1}^{i j} & =y_t-\mu_j-F x_{t \mid t-1}^{i j} \\
+		H_{t \mid t-1}^{i j} & =F P_{t \mid t-1}^{i j} F^T+R \\
+		K^{i j} & =P_{t \mid t-1}^{i j} F^T\left[H_{t \mid t-1}^{i j}\right]^{-1} \\
+		x_{t \mid t}^{i j} & =x_{t \mid t-1}^{i j}+K^{i j} \eta_{t \mid t-1}^{i j} \\
+		P_{t \mid t}^{i j} & =\left(I-K^{i j} F\right) P_{t \mid t-1}^{i j} 
+	\end{aligned}
+	$$
+	$$\Downarrow$$
+	\begin{center}
+		\textbf{Hamilton Filtering}
+	\end{center}
+	$$
+	\begin{aligned}
+		& f\left(y_t, S_{t-1}=i, S_t=j \mid \psi_{t-1}\right)=N\left(\eta_{t \mid t-1}^{i j}, H_{t \mid t-1}^{i j}\right) \times P_{i j} \times P\left(S_{t-1}=i \mid \psi_{t-1}\right) \\
+		& f\left(y_t \mid \psi_{t-1}\right)=\sum_{j=1}^M \sum_{i=1}^M f\left(y_t, S_{t-1}=i, S_t=j \mid \psi_{t-1}\right) \\
+		& P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]=\frac{f\left(y_t, S_{t-1}=i, S_t=j \mid \psi_{t-1}\right)}{f\left(y_t \mid \psi_{t-1}\right)} \\
+		& P\left[S_t=j \mid \psi_t\right]=\sum_{i=1}^M P\left[S_{t-1}=i, S_t=j \mid \psi_t\right] \\
+	\end{aligned}
+	$$
+	$$\Downarrow$$
+	\begin{center}
+	\textbf{Kim's Collapsing}
+	\end{center}
+	$$
+	\begin{aligned}
+		x_{t \mid t}^j & =\frac{\sum_{i=1}^M P\left[S_{t-1}=i, S_t=j \mid \psi_t\right] x_{t \mid t}^{i j}}{P\left[S_t=j \mid \psi_t\right]} \\
+		P_{t \mid t}^j & =\frac{\sum_{i=1}^M P\left[S_{t-1}=i, S_t=j \mid \psi_t\right]\left[P_{t \mid t}^{i j}+\left(x_{t \mid t}^j-x_{t \mid t}^{i j}\right)\left(x_{t \mid t}^j-x_{t \mid t}^{i j}\right)^T\right]}{P\left[S_t=j \mid \psi_t\right]}
+	\end{aligned}
+	$$
+	
+	In particular, three red colored terms $\left(x_{t-1 \mid t-1}^i, P_{t-1 \mid t-1}^i\right.$, and $\left.P\left(S_{t-1}=i \mid \psi_{t-1}\right)\right)$ are initialized for iteration to be started. Once the iterations get started, these red colored terms are replaced with blue colored terms $\left(x_{t \mid t}^j, P_{t \mid t}^j\right.$, and $\left.P\left(S_t=j \mid \psi_t\right)\right)$ for each iterations.
+	
+	%------------------------------------------- 
+
+	%-------------------------------------------
+	\newpage
+	\begin{appendices}
+		\section{R code}
+
+		
+	\end{appendices}
+	
+	%参考文献
+	%-------------------------------------------
+	\newpage
+	%\bibliographystyle{plainnat}%
+	%\bibliography{refs.bib}
+\end{document}
