@@ -1,0 +1,241 @@
+\documentclass[UTF8,12pt]{ctexart}
+
+\usepackage{geometry}%排版
+
+%%%%%%%%%%%%数学%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}%公式
+\usepackage{amsthm}%定理环境
+%\usepackage{ntheorem}%定理环境，使用这个会使\maketitle版式出问题
+\usepackage{mathrsfs}
+\usepackage{witharrows}
+
+\numberwithin{equation}{section}%对公式以节{section}为基础进行编号.变成（1.1.1）有chapter才有1.1.1，不然只有section是1.1
+%\theoremstyle{plain}%定理用latex默认的版式
+\newtheorem{thm}{Theorem}[section]
+%\theoremstyle{definition}%定义用definition格式
+\newtheorem{defn}{Definition}
+%\theoremstyle{remark}%用remark格式
+\newtheorem{lemma}[thm]{lemma}
+\newtheorem{example}{Example}[section]
+\newtheorem{prop}{命题}[section]   % 定义新的命题环境
+\usepackage{bm}%加粗
+
+%%%%%%%%%%%%表格%%%%%%%%%%%%
+\usepackage{multirow}%表格列合并宏包，\multirow命令.
+\usepackage{tabularx}%表格等宽，\begin{tabularx}命令.
+	
+%%%%%%%%%%%%图片%%%%%%%%%%%%	
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfigure} %插入多图时用子图显示的宏包
+	
+%%%%%%%%%%%%算法%%%%%%%%%%%%
+%\usepackage{algorithm,algorithmic}%算法
+\usepackage{algorithm}
+%\usepackage{algorithmic}
+\usepackage{algpseudocode}
+	
+%%%%%%%%%%%%代码%%%%%%%%%%%%	
+%\usepackage{minted}
+	
+%%%%%%%%%%%%盒子%%%%%%%%%%%%%
+%main
+\usepackage{varwidth}
+\usepackage{tikz}
+\usetikzlibrary{calc} % 引入 calc 库以使用高级坐标计算
+%\usepackage{xeCJK}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{xparse,hooks,skins,breakable}
+\tcbuselibrary{listings}
+\usepackage{fontawesome}
+\usepackage{mdframed}
+\usepackage{xcolor}	
+\input{box.tex}	
+
+\definecolor{citecolor}{RGB}{60,120,216}
+\definecolor{urlcolor}{RGB}{60,120,216}
+\definecolor{linkcolor}{RGB}{60,120,216}
+
+\usepackage{hyperref}%可以生成pdf书签，可以跳转
+\hypersetup{
+	colorlinks=true,%引用部分会显示颜色
+	linkcolor=linkcolor, %
+	urlcolor=urlcolor,%
+	allcolors=blue,
+	citecolor=citecolor,
+	pdftitle={EM Algorithm},%这个命令会使用pdf阅读器打开时左上角显示这个内容
+}
+
+	
+%\tcbuselibrary{skins, breakable}% 支持文本框跨页
+	
+%%%%%%%%%%%%参考文献%%%%%%%%%%%%%
+\usepackage[round]{natbib}
+	
+%%%%%%%%%%%%其他%%%%%%%%%%%%%
+\usepackage[english]{babel}% 载入美式英语断字模板
+\usepackage{caption}
+	
+	
+\usepackage{marginnote}
+%\usepackage{xcolor} % 用于颜色设置
+\usepackage{lipsum} % 生成示例文本
+\usepackage{ifthen} % 提供条件判断命令
+\usepackage{graphicx}
+	
+% 定义边注颜色
+\definecolor{mynotecolor}{rgb}{0.6, 0.4, 0.2} % 棕色
+	
+\newcommand{\mymarginnote}[1]{
+	\ifthenelse{\isodd{\value{page}}}
+	{\normalmarginpar\marginnote{\textcolor{mynotecolor}{#1}}} % 奇数页的边注
+	{\reversemarginpar\marginnote{\textcolor{mynotecolor}{#1}}} % 偶数页的边注
+}
+	
+	
+%%%%%%%%%%%%标题页%%%%%%%%%%%%%
+\title{EM with Filter}
+\author{Renhe W.}
+\date{ }
+	
+\begin{document}
+	\captionsetup[figure]{labelfont={bf},labelformat={default},labelsep=period,name={图}}%设置图注
+	%\newgeometry{left=3cm,right=3cm,top=3cm,bottom=3cm}
+	%\pagestyle{empty} % 可选，如果您不想在标题页和目录页显示页眉和页脚
+		
+	\maketitle
+	\tableofcontents%目录
+	\listoffigures%图片目录
+	\listoftables%表格目录
+	\newpage
+	\kaishu
+	
+	% 恢复双面布局
+	%\restoregeometry
+	%\pagestyle{headings} % 恢复页眉和页脚
+	
+		
+	%------------------------------------------- 
+	\section{Introduction}
+	状态空间模型的求解有很多方式，这里介绍一种比较特殊的方法，这个方法由\citet{shumway1982approach}提出，这个方法结合了通常的Kalman Filter \citep{kalman1960new}以及EM算法\citep{dempster1977maximum}，详细的内容如下：
+	
+	考虑一个状态空间模型，在这个模型中，感兴趣的$p \times 1$理想化向量序列$\boldsymbol{x}_t$并没有被直接观测到，而是作为随机回归模型中的一个组成部分：
+	\begin{equation}\label{observation equation}
+		\boldsymbol{y}_t=\boldsymbol{M}_t \boldsymbol{x}_t+\boldsymbol{v}_t, \quad t=1,2, \ldots, n
+	\end{equation}
+	其中$M_t$是一个已知的$q \times p$设计矩阵，它表达了将未观测的随机向量$\boldsymbol{x}_t$转换为$q \times 1$观测序列$\boldsymbol{y}_t$的模式. 误差或噪声项$v_t, t=1, \ldots, n$被假定为具有公共$q \times q$协方差矩阵$R$的零均值非相关正态分布噪声向量. 随机序列$x_t$被认为是主要兴趣的对象；它被建模为一阶多变量过程，形式为
+	\begin{equation}\label{hidden state}
+		\boldsymbol{x}_t=\Phi \boldsymbol{x}_{t-1}+w_t, \quad t=1, \ldots, n,
+	\end{equation}
+	其中$\Phi$是一个$p \times p$过渡矩阵，描述了底层序列在连续时间段内的移动方式. 由于我们没有对$\Phi$的特征方程的根作出特别假设，因此过程$x_t$可能是非平稳的. 初始值$\boldsymbol{x}_0$被假定为具有均值向量$\boldsymbol{\mu}$和$p \times p$协方差矩阵$\Sigma$的正态随机向量. $p \times 1$噪声项$\boldsymbol{w}_t$, $t=1, \ldots, n$是具有公共协方差矩阵$Q$的零均值非相关正态向量.
+	
+	模型\eqref{observation equation}和\eqref{hidden state}的动机源于希望分别考虑模型误差$\boldsymbol{w}_t$定义的模型中的不确定性和通过测量噪声过程$v_t$表达的对模型进行测量的不确定性. 将\eqref{observation equation}视为时间序列的一种随机效应模型可能会有所帮助，其中效应向量$\boldsymbol{x}_t$具有由多变量自回归模型\eqref{hidden state}强加的时间相关结构. 在这个背景下，它是普通自回归AR模型的推广，考虑了观测噪声以及模型引入的噪声. 人们可以将$M_t$视为固定的设计矩阵，它定义了我们观察向量$\boldsymbol{x}_t$的组成部分的方式. 例如，在这篇论文中，它提供了一种方便的方法来处理因缺失观测而引入的不完整数据问题.
+	
+	平滑或预测程序的主要目标是使用观测序列$\boldsymbol{y}_1, \boldsymbol{y}_2, \ldots, \boldsymbol{y}_n$来估计未观测序列$x_t$，对于$t=1,2, \ldots, n$（平滑）和$t=n+1, n+2, \ldots$（预测）. 如果知道参数$\mu, \Sigma, \Phi, Q$和$R$的值，可以将传统的卡尔曼平滑估计器计算为条件期望，并且将具有{\color{brown}最小均方误差}. 这相当于将过程$\boldsymbol{x}_t$视为在贝叶斯意义上依赖于假设的先验值的随机参数向量. 
+	
+	
+	\begin{ascolorbox3}{Note}
+		通常，与Newton-Raphson或评分校正的高度非线性外观相比，EM方程呈现出一种简单、直观上吸引人的形式. 当然，由于在EM程序中从未计算过二阶偏导数矩阵，因此它无法提供估计的标准误差；这些偏导数仍可以通过在最大值附近扰动似然函数来近似. 另一个缺点是，在迭代过程的后期，EM算法可能收敛缓慢；在这个阶段，人们可能希望切换到另一种算法.
+	\end{ascolorbox3}
+	本文将在缺失数据背景下的平滑或预测任务解释为基本上是估计状态空间模型\eqref{observation equation}和\eqref{hidden state}中的随机过程$\boldsymbol{x}_t$的问题. 如果参数$\mu, \Sigma, \Phi, Q$和$R$是已知的，那么基于观测数据的条件均值提供了最小均方误差解. 如果这些参数事先未指定，将使用EM算法通过最大似然进行估计. 这需要传统的条件均值和协方差的递归形式，以及在附录A中给出的新递归. 我们还展示了可以容忍非常普遍的缺失观测模式，并指出了一种用于调整估计器的校正程序。提供了一个例子，涉及对经济序列的平滑和预测，该序列在感兴趣的时间段内只被两个不同的来源部分观测到.
+	
+	
+	\section{EM with Filter}
+	根据定义的状态空间模型\eqref{observation equation}和\eqref{hidden state}，则对数完整数据$x_0, x_1, \ldots, x_n, y_1, \ldots, y_n$似然函数可以写成以下形式：
+	\begin{equation}\label{complete log likelihood}
+			\begin{aligned}
+			\log L \triangleq & -\frac{1}{2} \log |\Sigma|-\frac{1}{2}\left(\boldsymbol{x}_0-\boldsymbol{\mu}\right)^{\prime} \Sigma^{-1}\left(\boldsymbol{x}_0-\boldsymbol{\mu}\right) \\
+			& -\frac{n}{2} \log |Q|-\frac{1}{2} \sum_{t=1}^n\left(\boldsymbol{x}_t-\Phi \boldsymbol{x}_{t-1}\right)^{\prime} Q^{-1}\left(\boldsymbol{x}_t-\Phi \boldsymbol{x}_{t-1}\right) \\
+			& -\frac{n}{2} \log |R|-\frac{1}{2} \sum_{t=1}^n\left(\boldsymbol{y}_t-\boldsymbol{M}_t \boldsymbol{x}_t\right)^{\prime} R^{-1}\left(\boldsymbol{y}_t-\boldsymbol{M}_t \boldsymbol{x}_t\right)
+		\end{aligned}
+	\end{equation}
+	其中$\log L$需要针对参数$\mu, \Sigma, \Phi, Q$和$R$进行最大化. 由于上述对数似然依赖于未观测数据序列$\boldsymbol{x}_t, t=0,1, \ldots, n$，我们考虑对观测序列$y_1, y_2, \ldots, y_n$应用条件EM算法. 也就是说，定义在第$(r+1)$次迭代中的估计参数为最大化
+	\begin{equation}\label{G function}
+		G(\boldsymbol{\mu}, \Sigma, \Phi, Q, R)=E_r\left(\log L \mid \boldsymbol{y}_1, \ldots, \boldsymbol{y}_n\right)
+	\end{equation}
+	的值$\mu, \Sigma, \Phi, Q, R$，其中$E_r$表示相对于包含第$r$次迭代值$\mu(r), \Sigma(r), \Phi(r), Q(r)$和$R(r)$的密度的条件期望. \citet{dempster1977maximum}已经展示，定义为这样一系列步骤的迭代程序能产生非递减的似然值，且固定点被定义为似然函数的一个稳定点.
+	
+	为了计算\eqref{G function}中定义的条件期望，定义条件均值
+	\begin{equation}\label{x_t filter}
+		\boldsymbol{x}_t^s=E\left(\boldsymbol{x}_t \mid \boldsymbol{y}_1, \ldots, \boldsymbol{y}_s\right)
+	\end{equation}
+	和协方差函数
+	\begin{equation}\label{covariance filter}
+		P_t^s=cov\left(\boldsymbol{x}_t \mid \boldsymbol{y}_1, \ldots, \boldsymbol{y}_s\right)
+	\end{equation}
+	以及
+	\begin{equation}\label{covariance t_1 filter}
+		P_{t, t-1}^s=cov\left(\boldsymbol{x}_t, \boldsymbol{x}_{t-1} \mid \boldsymbol{y}_1, \ldots, \boldsymbol{y}_s\right) .
+	\end{equation}
+	例如，随机向量$\boldsymbol{x}_t^t$是常用的卡尔曼滤波估计器，而$\boldsymbol{x}_t^n, t=0,1, \ldots, n$是基于所有观测数据的$\boldsymbol{x}_t$的最小均方误差平滑估计器. 对于$t>n$的随机向量$\boldsymbol{x}_t^n$是底层序列的预测值. 使用标准卡尔曼滤波结果（参见\citet{jazwinski2007stochastic}）计算$\boldsymbol{x}_t^n$和$P_t^n$的一组递归公式在附录A中给出；我们还提供了一种新的递归方法来计算协方差$P_{t, t-1}^n$.
+	
+	现在，在\eqref{complete log likelihood}中取条件期望得到
+	\begin{equation}\label{conditional expectation}
+		\begin{aligned}
+			G(\mu, \Sigma, \Phi, Q, R)= & -\frac{1}{2} \log |\Sigma|-\frac{1}{2} \operatorname{tr}\left\{\Sigma^{-1}\left(P_0^n+\left(x_0^n-\mu\right)\left(x_0^n-\mu\right)^{\prime}\right)\right\} \\
+			& -\frac{n}{2} \log |Q|-\frac{1}{2} \operatorname{tr}\left\{Q^{-1}\left(C-B \Phi^{\prime}-\Phi B^{\prime}+\Phi A \Phi^{\prime}\right)\right\} \\
+			& -\frac{n}{2} \log |R| \\
+			& -\frac{1}{2} \operatorname{tr}\left\{R^{-1} \sum_{t=1}^n\left[\left(y_t-M_t x_t^n\right)\left(y_t-M_t x_t^n\right)^{\prime}+M_t P_t^n M_t^{\prime}\right]\right\}
+		\end{aligned}
+	\end{equation}
+
+	其中tr表示迹，公式如下：
+	
+	\begin{equation}\label{A}
+		 A=\sum_{t=1}^n\left(P_{t-1}^n+x_{t-1}^n x_{t-1}^{n \prime}\right),
+	\end{equation}
+	\begin{equation}\label{B}
+		B=\sum_{t=1}^n\left(P_{t, t-1}^n+x_t^n x_{t-1}^{n \prime}\right),
+	\end{equation}
+	和
+	\begin{equation}\label{C}
+	C=\sum_{t=1}^n\left(P_t^n+x_t^n x_t^{n \prime}\right) .
+	\end{equation}
+	卡尔曼滤波项$\boldsymbol{x}_t^n, P_t^n$和$P_{t, t-1}^n$是在参数值$\boldsymbol{\mu}(r), \Phi(r), Q(r), R(r)$下使用附录A中的递归计算的. 此外，不难看出选择
+	
+	\begin{equation}\label{Phi}
+		\Phi(r+1)=B A^{-1},
+	\end{equation}
+	
+	\begin{equation}\label{Q}
+		Q(r+1)=n^{-1}\left(C-B A^{-1} B^{\prime}\right),
+	\end{equation}
+
+	和
+	$$
+	R(r+1)=n^{-1} \sum_{t=1}^n\left[\left(y_t-M_t x_t^n\right)\left(y_t-M_t x_t^n\right)^{\prime}+M_t P_t^n M_t^{\prime}\right]
+	$$
+	可以最大化似然函数\eqref{conditional expectation}的最后两行. 第一项类似于多元正态似然的单次复制，因此可以取$\boldsymbol{\mu}_0(r+1)=\boldsymbol{x}_0^n$并将$\Sigma$的值固定在某个合理的基线水平. 关于在复制的卡尔曼滤波模型中估计$\boldsymbol{\mu}$和$\boldsymbol{\Sigma}$的研究可见于Shumway等人（1981）.
+	
+	在某些情况下，人们可能想要限制$\Phi$的元素. 
+	
+	例如，在限制条件
+	$$
+	\Phi F=G,
+	$$
+	下，其中$F$和$G$是指定的$p \times s(s \leqslant p)$矩阵，我们得到约束估计器
+	$$
+	\Phi_c=\Phi-(\Phi F-G)\left(F^{\prime} A^{-1} F\right)^{-1} F^{\prime} A^{-1}
+	$$
+	和
+	$$
+	Q_c=Q+(\Phi F-G)\left(F^{\prime} A^{-1} F\right)^{-1}(\Phi F-G)^{\prime}
+	$$
+	对应于\eqref{Phi}和\eqref{Q}，其中参数$(r+1)$出于记号方便已被省略. 
+	可以使用“创新”形式（参见Gupta和Mehra（1974））在每个阶段计算对数似然函数的值
+	$$
+	\begin{aligned}
+		\log L \stackrel{\circ}{=} & -\frac{1}{2} \sum_{t=1}^n \log \left|M_t P_t^{t-1} M_t^{\prime}+R_t\right| \\
+		& -\frac{1}{2} \sum_{t=1}^n\left(y_t-M_t x_t^{t-1}\right)^{\prime}\left(M_t P_t^{t-1} M_t^{\prime}+R_t\right)^{-1}\left(y_t-M_t x_t^{t-1}\right) .
+	\end{aligned}
+	$$
+	
+	
+	
+	%-------------------------------------------
+	\newpage
+	\bibliographystyle{plainnat}%
+	\bibliography{refs.bib}
+\end{document}

@@ -1,0 +1,2 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {1}Recursive Algorithm}{2}{section.1}%
